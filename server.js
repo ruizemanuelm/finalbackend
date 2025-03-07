@@ -7,7 +7,7 @@ const jwt = require("jsonwebtoken");
 const app = express();
 app.use(express.json());
 app.use(cors({
-  origin: "http://localhost:3000",  // El origen del frontend
+  origin: "https://final-delta-beryl.vercel.app/",
   credentials: true,  // Esto permite el uso de cookies
 }));
 
