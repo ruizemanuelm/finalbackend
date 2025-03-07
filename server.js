@@ -1,64 +1,34 @@
-import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const jwt = require("jsonwebtoken");
 
-export default NextAuth({
-  providers: [
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        contrasena: { label: "Contraseña", type: "password" },
-      },
-      async authorize(credentials) {
-        try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}api/users/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(credentials),
-          });
+const app = express();
+app.use(express.json());
+app.use(cors({
+  origin: "https://final-delta-beryl.vercel.app",
+  credentials: true, 
+}));
 
-          if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.error || "Error en la autenticación");
-          }
+// Importar rutas
+const userRoutes = require("./routes/userRoutes");
+const productRoutes = require("./routes/productRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
 
-          const user = await res.json();
-          if (!user || !user.id || !user.email) {
-            throw new Error("Usuario no válido");
-          }
 
-          return user;
-        } catch (error) {
-          console.error("Error en login:", error.message);
-          throw new Error(error.message || "Error en el servidor");
-        }
-      },
-    }),
-  ],
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 días en segundos
-    updateAge: 24 * 60 * 60,   // Refrescar cada 24 horas
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.user = user;
-      }
-      
-      if (!token.exp) {
-        token.exp = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
-      }
+app.use("/api/users", userRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/categories", categoryRoutes); // Agregar ruta de categorías
 
-      return token;
-    },
-    async session({ session, token }) {
-      session.user = token.user;
-      return session;
-    },
-  },
-  pages: {
-    signIn: "/login", // Página de login personalizada
-    error: "/login", // Redirige a login si hay error
-  },
-});
+
+// Conectar a MongoDB
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => console.log("MongoDB conectado"))
+  .catch(err => console.log(err));
+
+// Iniciar servidor
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
