@@ -7,8 +7,8 @@ const jwt = require("jsonwebtoken");
 const app = express();
 app.use(express.json());
 app.use(cors({
-  origin: "https://final-delta-beryl.vercel.app/",
-  credentials: true,  // Esto permite el uso de cookies
+  origin: "https://final-delta-beryl.vercel.app",
+  credentials: true, 
 }));
 
 // Importar rutas
